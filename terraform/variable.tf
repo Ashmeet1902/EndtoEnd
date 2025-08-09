@@ -16,6 +16,3 @@ variable "image_name" {
 variable "image_tag" {
      default = "latest" 
      }
-variable "image_tags" {
-     default = "latest" 
-     }
