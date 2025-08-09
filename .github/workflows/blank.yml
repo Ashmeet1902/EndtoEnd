@@ -4,43 +4,22 @@ on:
   push:
     branches:
       - main
-      - master
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
 
-      - name: Azure Login
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Init
         run: terraform init
+        working-directory: ./terraform
 
       - name: Terraform Apply
         run: terraform apply -auto-approve
-
-      - name: Get Terraform Outputs
-        id: tfout
-        run: |
-          echo "acr_server=$(terraform output -raw acr_login_server)" >> $GITHUB_ENV
-          echo "acr_username=$(terraform output -raw acr_username)" >> $GITHUB_ENV
-          echo "acr_password=$(terraform output -raw acr_password)" >> $GITHUB_ENV
-
-      - name: Docker Login to ACR
-        run: echo ${{ env.acr_password }} | docker login ${{ env.acr_server }} -u ${{ env.acr_username }} --password-stdin
-
-      - name: Build and Push Docker Image
-        run: |
-          docker build -t ${{ env.acr_server }}/myappimage:latest .
-          docker push ${{ env.acr_server }}/myappimage:latest
-
-      - name: Terraform Apply Again (for container to pull latest image)
-        run: terraform apply -auto-approve
+        working-directory: ./terraform
